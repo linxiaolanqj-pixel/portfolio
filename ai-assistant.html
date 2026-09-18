@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="preconnect" href="https://fonts.font.im">
+<link rel="preconnect" href="https://gstatic.font.im" crossorigin>
+<link href="https://fonts.font.im/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<title>AI 旅游智能助手 · 多智能体应用案例</title>
+<style>
+  :root{
+    color-scheme: light;
+    --paper:#FBF6EA;
+    --ink:#0E0E0E;
+    --blue:#2B50E6;
+    --yellow:#FFC93C;
+    --coral:#FF6A3D;
+    --mint:#8BD450;
+    --lav:#B08BEB;
+    --orange:#FF8A3D;
+    --shadow:6px 6px 0 var(--ink);
+    --shadow-sm:4px 4px 0 var(--ink);
+    --sans:"Archivo Black","Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    --body:"Space Grotesk","Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    --mono:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:16px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px 100px;}
+  a{color:var(--ink);}
+
+  /* ---- shared blocks ---- */
+  .kicker{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    display:inline-block;padding:5px 10px;border:2.5px solid var(--ink);background:var(--yellow);margin-bottom:14px;}
+  h2.sec{font-family:var(--sans);font-weight:900;font-size:clamp(26px,4.4vw,40px);line-height:1.05;margin:0 0 6px;letter-spacing:-.01em;}
+  h3.sub{font-family:var(--sans);font-weight:900;font-size:clamp(20px,3vw,26px);margin:0 0 6px;}
+  .sec-note{font-size:15px;max-width:660px;margin:0 0 26px;color:#3a352f;}
+  section{margin-top:78px;}
+  .chip{font-family:var(--mono);font-size:12.5px;font-weight:700;padding:6px 11px;border:2.5px solid var(--ink);background:#fff;display:inline-block;}
+  .divider{height:0;border-top:3px solid var(--ink);margin:60px 0 0;}
+
+  /* ---- hero ---- */
+  header.hero{padding:64px 0 8px;}
+  .hero .kicker{background:var(--coral);color:#fff;}
+  .hero h1{font-family:var(--sans);font-weight:900;font-size:clamp(40px,8.5vw,82px);line-height:.98;margin:6px 0 0;letter-spacing:-.02em;}
+  .hero h1 .mk{background:var(--blue);color:#fff;padding:0 10px;box-shadow:var(--shadow);display:inline-block;transform:rotate(-1.5deg);}
+  .hero .sub{font-family:var(--sans);font-weight:900;font-size:clamp(18px,2.6vw,24px);margin:26px 0 0;}
+  .hero .lede{font-size:17px;max-width:700px;margin:16px 0 0;line-height:1.75;}
+  .hero .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;}
+  .hero .meta .chip:nth-child(3n+1){background:var(--mint);}
+  .hero .meta .chip:nth-child(3n+2){background:var(--yellow);}
+  .hero .meta .chip:nth-child(3n){background:var(--lav);}
+
+  /* ---- pain scenario ---- */
+  .story{border:3px solid var(--ink);box-shadow:var(--shadow);background:#fff;padding:26px 26px 24px;margin-top:8px;}
+  .story .who{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    background:var(--ink);color:var(--paper);padding:5px 10px;display:inline-block;margin-bottom:16px;}
+  .story p{margin:0 0 12px;font-size:16px;line-height:1.85;}
+  .story p:last-child{margin-bottom:0;}
+  .story .hl{background:var(--yellow);padding:0 4px;border:1.5px solid var(--ink);font-weight:700;}
+  .story .hl.r{background:#ffd9db;} .story .hl.b{background:#d7e0ff;}
+
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:22px;}
+  @media(max-width:760px){.grid3{grid-template-columns:1fr;}}
+  .card{background:#fff;border:3px solid var(--ink);box-shadow:var(--shadow-sm);padding:20px 18px;}
+  .card .tag{font-family:var(--mono);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.08em;
+    padding:4px 8px;border:2.5px solid var(--ink);display:inline-block;margin-bottom:12px;}
+  .card.p1 .tag{background:var(--coral);color:#fff;} .card.p2 .tag{background:var(--yellow);} .card.p3 .tag{background:var(--mint);}
+  .card h3{font-family:var(--sans);font-weight:900;font-size:18px;margin:0 0 8px;}
+  .card p{font-size:14px;margin:0;color:#3a352f;line-height:1.6;}
+
+  /* ---- 3-step front-end flow ---- */
+  .flow3{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:stretch;gap:0;margin-top:8px;}
+  @media(max-width:760px){.flow3{grid-template-columns:1fr;gap:0;}}
+  .step{border:3px solid var(--ink);box-shadow:var(--shadow);background:#fff;padding:20px 18px;}
+  .step .n{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--blue);}
+  .step h4{font-family:var(--sans);font-weight:900;font-size:18px;margin:8px 0 8px;}
+  .step p{font-size:13.5px;margin:0;color:#3a352f;line-height:1.58;}
+  .step.f1{background:#eef2ff;} .step.f2{background:#fff7d6;} .step.f3{background:#e3faf0;}
+  .flowsep{display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:900;font-size:32px;padding:0 10px;}
+  @media(max-width:760px){.flowsep{padding:8px 0;transform:rotate(90deg);}}
+
+  /* ---- agent picker (interactive) ---- */
+  .agent-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px;}
+  @media(max-width:640px){.agent-picker{grid-template-columns:1fr 1fr;}}
+  .ava{font-family:var(--body);cursor:pointer;border:3px solid var(--ink);box-shadow:var(--shadow-sm);
+    background:#fff;padding:16px 10px 14px;text-align:center;transition:transform .08s ease;}
+  .ava:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink);}
+  .ava .face{font-size:38px;line-height:1;display:block;margin-bottom:8px;}
+  .ava .rn{font-family:var(--sans);font-weight:900;font-size:14px;display:block;}
+  .ava .en{font-family:var(--mono);font-size:10px;color:#6a635a;display:block;margin-top:3px;letter-spacing:.02em;word-break:break-all;}
+  .ava.a1.on{background:var(--blue);color:#fff;} .ava.a2.on{background:var(--yellow);}
+  .ava.a3.on{background:var(--coral);color:#fff;} .ava.a4.on{background:var(--lav);}
+  .ava.on{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink);}
+  .ava.on .en{color:inherit;opacity:.85;}
+  .ava .hint{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#9a938a;display:block;margin-top:8px;}
+  .ava.on .hint{color:inherit;opacity:.8;}
+
+  .agent-detail{margin-top:20px;border:3px solid var(--ink);box-shadow:var(--shadow);background:#fff;padding:22px 22px 24px;}
+  .agent-detail .dh{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .agent-detail .dh .df{font-size:34px;line-height:1;}
+  .agent-detail .dh h4{font-family:var(--sans);font-weight:900;font-size:22px;margin:0;}
+  .agent-detail .dh .role{font-family:var(--mono);font-weight:700;font-size:11px;padding:4px 8px;border:2.5px solid var(--ink);background:var(--paper);}
+  .agent-detail .dh .tool{font-family:var(--mono);font-size:11.5px;color:#6a635a;}
+  .agent-detail .intro{font-size:14.5px;line-height:1.7;color:#2a2620;margin:0 0 8px;}
+  .agent-detail .intro b{font-weight:900;background:#FFE7A0;padding:0 3px;}
+  .agent-detail .plab{font-family:var(--mono);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:#6a635a;margin:16px 0 8px;}
+
+  /* code block */
+  pre.code{background:var(--ink);color:#FBF6EA;border:3px solid var(--ink);box-shadow:var(--shadow);
+    padding:18px 20px;overflow:auto;font-family:var(--mono);font-size:12.5px;line-height:1.65;margin:0;white-space:pre;}
+  pre.code .cm{color:#9db4ff;} pre.code .kw{color:var(--yellow);} pre.code .st{color:#7ce0b0;}
+
+  /* ---- architecture diagram ---- */
+  .figure{border:3px solid var(--ink);box-shadow:var(--shadow);background:#fff;padding:14px;margin:8px 0 0;}
+  .figure img{display:block;width:100%;height:auto;}
+  .figure figcaption{font-family:var(--mono);font-size:12.5px;font-weight:700;margin-top:10px;text-align:center;color:#4a453e;}
+  .dataflow{margin-top:22px;border:3px dashed var(--ink);background:#fff;padding:16px 18px;font-size:13.5px;line-height:1.7;}
+  .dataflow b{background:var(--yellow);padding:0 4px;border:1.5px solid var(--ink);}
+  .steps{list-style:none;padding:0;margin:24px 0 0;counter-reset:s;}
+  .steps li{border:2.5px solid var(--ink);box-shadow:2px 2px 0 var(--ink);background:#fff;padding:13px 15px 13px 52px;margin-bottom:12px;position:relative;font-size:14px;line-height:1.55;}
+  .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;bottom:0;width:38px;
+    display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:900;font-size:18px;
+    background:var(--ink);color:var(--yellow);}
+  .steps li b{font-weight:900;}
+
+  /* ---- budget ---- */
+  .budget{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px;}
+  @media(max-width:640px){.budget{grid-template-columns:1fr 1fr;}}
+  .bcard{border:3px solid var(--ink);box-shadow:var(--shadow-sm);background:#fff;padding:16px 14px;}
+  .bcard .bt{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.04em;color:#4a453e;}
+  .bcard .bv{font-family:var(--sans);font-weight:900;font-size:26px;margin-top:6px;line-height:1;}
+  .bcard.b1 .bv{color:var(--blue);} .bcard.b2 .bv{color:var(--coral);}
+  .bcard.b3 .bv{color:var(--mint);} .bcard.b4 .bv{color:var(--orange);}
+  .bbar{display:flex;margin-top:16px;border:3px solid var(--ink);box-shadow:var(--shadow-sm);overflow:hidden;height:38px;}
+  .bbar .seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:11px;color:#fff;border-right:2.5px solid var(--ink);}
+  .bbar .seg:last-child{border-right:none;color:var(--ink);}
+  .bbar .s1{background:var(--blue);} .bbar .s2{background:var(--coral);} .bbar .s3{background:var(--mint);} .bbar .s4{background:var(--orange);}
+  .btotal{margin-top:14px;font-family:var(--sans);font-weight:900;font-size:18px;}
+  .btotal span{background:var(--yellow);padding:2px 8px;border:2.5px solid var(--ink);}
+
+  /* ---- cost analysis ---- */
+  .cost-head{font-family:var(--sans);font-weight:900;font-size:clamp(18px,3vw,24px);margin:0 0 4px;}
+  .cost-head .down{background:var(--mint);padding:0 8px;border:2.5px solid var(--ink);box-shadow:2px 2px 0 var(--ink);display:inline-block;transform:rotate(-1deg);}
+  .cost-ba{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0;margin-top:22px;}
+  @media(max-width:760px){.cost-ba{grid-template-columns:1fr;}}
+  .cost-box{border:3px solid var(--ink);box-shadow:var(--shadow);padding:20px 20px 22px;background:#fff;}
+  .cost-box.before{border-color:var(--coral);box-shadow:6px 6px 0 var(--coral);}
+  .cost-box.after{border-color:var(--mint);box-shadow:6px 6px 0 var(--mint);}
+  .cost-box .cl{font-family:var(--sans);font-weight:900;font-size:19px;margin:0 0 12px;}
+  .cost-box.before .cl{color:#d63a3f;} .cost-box.after .cl{color:#0a9e6a;}
+  .cost-box ul{margin:0;padding:0;list-style:none;}
+  .cost-box li{font-size:13.5px;line-height:1.7;color:#2a2620;padding-left:16px;position:relative;}
+  .cost-box li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:2px;background:var(--ink);}
+  .cost-box code{font-family:var(--mono);font-size:12px;background:var(--paper);padding:0 3px;border:1px solid var(--ink);}
+  .cost-arrow{display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-weight:900;font-size:34px;color:var(--orange);padding:0 14px;}
+  @media(max-width:760px){.cost-arrow{padding:10px 0;transform:rotate(90deg);}}
+  .strat{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px;}
+  @media(max-width:640px){.strat{grid-template-columns:1fr;}}
+  .strat .s{border:3px solid var(--ink);box-shadow:var(--shadow-sm);background:#fff;padding:15px 16px;display:flex;align-items:center;gap:12px;}
+  .strat .s .p{font-family:var(--sans);font-weight:900;font-size:12px;padding:3px 7px;border:2.5px solid var(--ink);flex:none;}
+  .strat .s.p0 .p{background:var(--mint);} .strat .s.p1 .p{background:#eee;}
+  .strat .s .txt{font-size:14px;line-height:1.5;}
+  .strat .s .txt b{font-weight:900;}
+  .strat .s.c1{border-left:8px solid var(--blue);} .strat .s.c2{border-left:8px solid var(--mint);}
+  .strat .s.c3{border-left:8px solid var(--yellow);} .strat .s.c4{border-left:8px solid var(--orange);}
+
+  footer{margin-top:80px;border-top:3px solid var(--ink);padding-top:20px;font-family:var(--mono);font-size:12.5px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;color:#4a453e;}
+
+  /* ---- site nav (融合) ---- */
+  header.sitenav{position:sticky;top:0;z-index:60;background:rgba(251,246,234,.85);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:3.5px solid var(--ink);}
+  .sitenav .navin{max-width:1080px;margin:0 auto;padding:0 22px;height:72px;display:flex;align-items:center;justify-content:space-between;}
+  .sitenav .logo{font-family:var(--sans);font-size:20px;background:var(--ink);color:var(--yellow);width:46px;height:46px;display:grid;place-items:center;border-radius:13px;border:3.5px solid var(--ink);box-shadow:4px 4px 0 var(--ink);transform:rotate(-4deg);text-decoration:none;transition:transform .16s cubic-bezier(.2,.85,.25,1);}
+  .sitenav .logo:hover{transform:rotate(0) scale(1.04);}
+  .sitenav .back{display:inline-flex;align-items:center;gap:8px;background:#fff;border:3.5px solid var(--ink);border-radius:12px;padding:11px 18px;font-family:var(--body);font-weight:700;box-shadow:4px 4px 0 var(--ink);text-decoration:none;color:var(--ink);transition:transform .16s cubic-bezier(.2,.85,.25,1),box-shadow .16s,background .16s;}
+  .sitenav .back .ic{width:18px;height:18px;}
+  .sitenav .back:hover{transform:translate(-3px,-3px);box-shadow:6px 6px 0 var(--ink);background:var(--yellow);}
+  .sitenav a:focus-visible,.hero a:focus-visible{outline:3px solid var(--blue);outline-offset:3px;}
+  header.hero{padding-top:52px;}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<header class="sitenav"><div class="navin">
+  <a href="index.html" class="logo" aria-label="返回主页">蓝</a>
+  <a href="index.html#projects" class="back">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#0E0E0E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
+    返回项目
+  </a>
+</div></header>
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <div class="kicker">案例 · 多智能体 AI 应用</div>
+    <h1>AI <span class="mk">旅游智能助手</span></h1>
+  </header>
+
+  <!-- ============ 痛点场景 ============ -->
+  <section id="pain">
+    <div class="kicker">痛点场景</div>
+    <h2 class="sec">小 A 的一次出行规划</h2>
+    <p class="sec-note">在真正动手做产品之前，先看看一个普通用户是怎么被「规划一趟旅行」这件事折磨的。</p>
+
+    <div class="story">
+      <span class="who">用户故事 · 小 A</span>
+      <p>国庆想去成都玩 3 天，小 A 打开<span class="hl b">大众点评</span>翻景点评价，看到宽窄巷子不错；又切到<span class="hl b">地图 App</span>查它离酒店多远；再打开<span class="hl b">天气 App</span>看那几天会不会下雨；最后跳到<span class="hl b">订房页</span>比价订酒店。</p>
+      <p>四个 App 来回切换，信息全靠<span class="hl r">手动东拼西凑</span>；好不容易排好行程，临时想把第二天的景点换一个——结果<span class="hl r">路线、时间、预算全得重排一遍</span>。而她真正想要的，其实只是一句话：「帮我安排好，我照着走就行。」</p>
+    </div>
+
+    <div class="grid3">
+      <div class="card p1"><div class="tag">痛点 · 信息分散</div><h3>东拼西凑</h3><p>景点、天气、酒店分散在不同 App，用户要来回切换、手动整合，效率极低。</p></div>
+      <div class="card p2"><div class="tag">痛点 · 缺个性化</div><h3>千人一面</h3><p>通用攻略不考虑你的偏好、预算、出行时间等真实约束，看了还得自己改。</p></div>
+      <div class="card p3"><div class="tag">痛点 · 难调整</div><h3>牵一发动全身</h3><p>景点顺序、时间、预算相互关联，改一处往往要重排整个行程与花销。</p></div>
+    </div>
+  </section>
+
+  <!-- ============ 用户前端流程 ============ -->
+  <section id="flow">
+    <div class="kicker">产品流程</div>
+    <h2 class="sec">用户会经历的三步</h2>
+    <p class="sec-note">从「说出需求」到「拿到一份算得清账的行程」，用户前端只需经历三个环节。</p>
+
+    <div class="flow3">
+      <div class="step f1"><div class="n">STEP 01</div><h4>智能行程规划</h4><p>输入目的地、日期、偏好，四个 Agent 协作产出含景点 / 餐饮 / 酒店 / 天气的完整行程。</p></div>
+      <div class="flowsep">→</div>
+      <div class="step f2"><div class="n">STEP 02</div><h4>预算计算</h4><p>自动把费用拆成景点门票、酒店、餐饮、交通四大类并汇总，花销一目了然。</p></div>
+      <div class="flowsep">→</div>
+      <div class="step f3"><div class="n">STEP 03</div><h4>单次调用成本分析</h4><p>核算每生成一次行程的模型成本，并通过缓存、路由等策略把它压下来。</p></div>
+    </div>
+  </section>
+
+  <!-- ============ 介绍 1 · 智能行程规划 / Agent 角色设计 ============ -->
+  <section id="agents">
+    <div class="kicker">介绍 · 智能行程规划</div>
+    <h2 class="sec">Agent 角色设计</h2>
+    <p class="sec-note">为什么不用一个 Agent 干完所有事？因为提示词会爆炸、难维护、出错难定位。解法很直觉——像旅行社一样分工。<b>点击下面的小人</b>，看每个 Agent 的职责与它的提示词。</p>
+
+    <div class="agent-picker" id="agentPicker">
+      <button class="ava a1 on" data-k="attraction"><span class="face">🧭</span><span class="rn">景点搜索</span><span class="en">AttractionSearchAgent</span><span class="hint">点击查看</span></button>
+      <button class="ava a2" data-k="weather"><span class="face">☁️</span><span class="rn">天气查询</span><span class="en">WeatherQueryAgent</span><span class="hint">点击查看</span></button>
+      <button class="ava a3" data-k="hotel"><span class="face">🏨</span><span class="rn">酒店推荐</span><span class="en">HotelAgent</span><span class="hint">点击查看</span></button>
+      <button class="ava a4" data-k="planner"><span class="face">📋</span><span class="rn">行程规划</span><span class="en">PlannerAgent</span><span class="hint">点击查看</span></button>
+    </div>
+
+    <div class="agent-detail" id="agentDetail"><!-- filled by JS --></div>
+  </section>
+
+  <!-- ============ 介绍 · 架构 ============ -->
+  <section id="arch">
+    <div class="kicker">技术架构</div>
+    <h2 class="sec">四层架构，一条数据流</h2>
+    <p class="sec-note">系统采用经典的前后端分离架构，自上而下分为四层，每层只做自己那件事。</p>
+
+    <figure class="figure">
+      <svg viewBox="0 0 1000 640" role="img" aria-label="AI 旅游智能助手技术架构：前端层 / 后端层 / 智能体层 / 外部服务层" style="width:100%;height:auto;display:block;font-family:-apple-system,'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+        <defs>
+          <marker id="arch-ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#0E0E0E"/></marker>
+        </defs>
+        <rect x="30" y="14" width="930" height="132" fill="#0E0E0E"/>
+        <rect x="24" y="8" width="930" height="132" fill="#ffffff" stroke="#0E0E0E" stroke-width="3"/>
+        <rect x="42" y="26" width="156" height="40" fill="#2B50E6" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="120" y="52" text-anchor="middle" font-size="16" font-weight="900" fill="#ffffff">前端层</text>
+        <text x="120" y="92" text-anchor="middle" font-size="11" fill="#4a453e" style="font-family:'SF Mono',Menlo,Consolas,monospace">Vue3 · TS · SPA</text>
+        <rect x="210" y="50" width="231" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="325" y="85" text-anchor="middle" font-size="15" font-weight="700" fill="#0E0E0E">首页表单</text>
+        <rect x="459" y="50" width="231" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="574" y="85" text-anchor="middle" font-size="15" font-weight="700" fill="#0E0E0E">结果展示</text>
+        <rect x="708" y="50" width="231" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="823" y="85" text-anchor="middle" font-size="15" font-weight="700" fill="#0E0E0E">地图可视化</text>
+        <line x1="489" y1="142" x2="489" y2="170" stroke="#0E0E0E" stroke-width="3" marker-end="url(#arch-ar)"/>
+        <rect x="30" y="176" width="930" height="132" fill="#0E0E0E"/>
+        <rect x="24" y="170" width="930" height="132" fill="#ffffff" stroke="#0E0E0E" stroke-width="3"/>
+        <rect x="42" y="188" width="156" height="40" fill="#FFC93C" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="120" y="214" text-anchor="middle" font-size="16" font-weight="900" fill="#0E0E0E">后端层</text>
+        <text x="120" y="254" text-anchor="middle" font-size="11" fill="#4a453e" style="font-family:'SF Mono',Menlo,Consolas,monospace">FastAPI</text>
+        <rect x="210" y="212" width="231" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="325" y="247" text-anchor="middle" font-size="15" font-weight="700" fill="#0E0E0E">API 路由</text>
+        <rect x="459" y="212" width="231" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="574" y="247" text-anchor="middle" font-size="15" font-weight="700" fill="#0E0E0E">数据校验</text>
+        <rect x="708" y="212" width="231" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="823" y="247" text-anchor="middle" font-size="15" font-weight="700" fill="#0E0E0E">服务编排</text>
+        <line x1="489" y1="304" x2="489" y2="332" stroke="#0E0E0E" stroke-width="3" marker-end="url(#arch-ar)"/>
+        <rect x="30" y="338" width="930" height="132" fill="#0E0E0E"/>
+        <rect x="24" y="332" width="930" height="132" fill="#ffffff" stroke="#0E0E0E" stroke-width="3"/>
+        <rect x="42" y="350" width="156" height="40" fill="#FF6A3D" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="120" y="376" text-anchor="middle" font-size="16" font-weight="900" fill="#ffffff">智能体层</text>
+        <text x="120" y="416" text-anchor="middle" font-size="11" fill="#4a453e" style="font-family:'SF Mono',Menlo,Consolas,monospace">Multi-Agent</text>
+        <rect x="210" y="374" width="169" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="294" y="399" text-anchor="middle" font-size="14" font-weight="700" fill="#0E0E0E">景点搜索</text>
+        <text x="294" y="418" text-anchor="middle" font-size="10.5" fill="#4a453e" style="font-family:'SF Mono',Menlo,Consolas,monospace">Agent</text>
+        <rect x="397" y="374" width="169" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="481" y="399" text-anchor="middle" font-size="14" font-weight="700" fill="#0E0E0E">天气查询</text>
+        <text x="481" y="418" text-anchor="middle" font-size="10.5" fill="#4a453e" style="font-family:'SF Mono',Menlo,Consolas,monospace">Agent</text>
+        <rect x="584" y="374" width="169" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="668" y="399" text-anchor="middle" font-size="14" font-weight="700" fill="#0E0E0E">酒店推荐</text>
+        <text x="668" y="418" text-anchor="middle" font-size="10.5" fill="#4a453e" style="font-family:'SF Mono',Menlo,Consolas,monospace">Agent</text>
+        <rect x="771" y="374" width="169" height="58" fill="#FFC93C" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="855" y="399" text-anchor="middle" font-size="14" font-weight="700" fill="#0E0E0E">行程规划</text>
+        <text x="855" y="418" text-anchor="middle" font-size="10.5" fill="#4a453e" style="font-family:'SF Mono',Menlo,Consolas,monospace">Agent</text>
+        <line x1="489" y1="466" x2="489" y2="494" stroke="#0E0E0E" stroke-width="3" marker-end="url(#arch-ar)"/>
+        <rect x="30" y="500" width="930" height="132" fill="#0E0E0E"/>
+        <rect x="24" y="494" width="930" height="132" fill="#ffffff" stroke="#0E0E0E" stroke-width="3"/>
+        <rect x="42" y="512" width="156" height="40" fill="#8BD450" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="120" y="538" text-anchor="middle" font-size="16" font-weight="900" fill="#0E0E0E">外部服务层</text>
+        <text x="120" y="578" text-anchor="middle" font-size="11" fill="#4a453e" style="font-family:'SF Mono',Menlo,Consolas,monospace">MCP · API</text>
+        <rect x="210" y="536" width="231" height="58" fill="#FFC93C" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="325" y="571" text-anchor="middle" font-size="15" font-weight="700" fill="#0E0E0E">高德地图 API</text>
+        <rect x="459" y="536" width="231" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="574" y="571" text-anchor="middle" font-size="15" font-weight="700" fill="#0E0E0E">天气 API</text>
+        <rect x="708" y="536" width="231" height="58" fill="#FBF6EA" stroke="#0E0E0E" stroke-width="2.5"/>
+        <text x="823" y="571" text-anchor="middle" font-size="15" font-weight="700" fill="#0E0E0E">LLM API</text>
+      </svg>
+      <figcaption>图 1 · AI 旅游智能助手技术架构（四层结构，自绘）</figcaption>
+    </figure>
+
+    <div class="dataflow">
+      <b>数据流转：</b>用户在前端填表 → 后端校验数据 → 调用智能体系统 → 三个专家 Agent 并行取数（景点 / 天气 / 酒店）→ 规划 Agent 整合生成 → 每个 Agent 通过 MCP 调用外部 API → 结果返回前端渲染。
+    </div>
+
+    <h3 class="sub" style="margin-top:52px;">多智能体协作流程</h3>
+    <p class="sec-note">用户请求进来，三个专家并行取数，规划师汇总生成最终计划。</p>
+
+    <figure class="figure">
+      <svg viewBox="0 0 1000 574" role="img" aria-label="多智能体协作流程" style="width:100%;height:auto;display:block;font-family:-apple-system,'PingFang SC','Microsoft YaHei',system-ui,sans-serif">
+        <defs>
+          <marker id="flow-ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#0E0E0E"/></marker>
+        </defs>
+        <line x1="500" y1="70" x2="180" y2="150" stroke="#0E0E0E" stroke-width="3" marker-end="url(#flow-ar)"/>
+        <line x1="500" y1="70" x2="500" y2="150" stroke="#0E0E0E" stroke-width="3" marker-end="url(#flow-ar)"/>
+        <line x1="500" y1="70" x2="820" y2="150" stroke="#0E0E0E" stroke-width="3" marker-end="url(#flow-ar)"/>
+        <line x1="180" y1="230" x2="420" y2="336" stroke="#0E0E0E" stroke-width="3" marker-end="url(#flow-ar)"/>
+        <line x1="500" y1="230" x2="500" y2="336" stroke="#0E0E0E" stroke-width="3" marker-end="url(#flow-ar)"/>
+        <line x1="820" y1="230" x2="580" y2="336" stroke="#0E0E0E" stroke-width="3" marker-end="url(#flow-ar)"/>
+        <line x1="500" y1="414" x2="500" y2="482" stroke="#0E0E0E" stroke-width="3" marker-end="url(#flow-ar)"/>
+        <text x="330" y="118" text-anchor="middle" font-size="11" fill="#4a453e" style="font-family:'SF Mono',Menlo,Consolas,monospace">并行调用</text>
+        <text x="648" y="300" text-anchor="middle" font-size="11" fill="#4a453e" style="font-family:'SF Mono',Menlo,Consolas,monospace">整合三方结果</text>
+        <rect x="392" y="14" width="216" height="56" fill="#0E0E0E"/>
+        <text x="500" y="48" text-anchor="middle" font-size="17" font-weight="900" fill="#FBF6EA">用户请求</text>
+        <rect x="46" y="156" width="268" height="80" fill="#0E0E0E"/>
+        <rect x="40" y="150" width="268" height="80" fill="#2B50E6" stroke="#0E0E0E" stroke-width="3"/>
+        <text x="174" y="190" text-anchor="middle" font-size="16" font-weight="900" fill="#ffffff">景点搜索</text>
+        <text x="174" y="212" text-anchor="middle" font-size="10.5" fill="#ffffff" style="font-family:'SF Mono',Menlo,Consolas,monospace">AttractionSearchAgent</text>
+        <rect x="366" y="156" width="268" height="80" fill="#0E0E0E"/>
+        <rect x="360" y="150" width="268" height="80" fill="#FFC93C" stroke="#0E0E0E" stroke-width="3"/>
+        <text x="494" y="190" text-anchor="middle" font-size="16" font-weight="900" fill="#0E0E0E">天气查询</text>
+        <text x="494" y="212" text-anchor="middle" font-size="10.5" fill="#0E0E0E" style="font-family:'SF Mono',Menlo,Consolas,monospace">WeatherQueryAgent</text>
+        <rect x="686" y="156" width="268" height="80" fill="#0E0E0E"/>
+        <rect x="680" y="150" width="268" height="80" fill="#FF6A3D" stroke="#0E0E0E" stroke-width="3"/>
+        <text x="814" y="190" text-anchor="middle" font-size="16" font-weight="900" fill="#ffffff">酒店推荐</text>
+        <text x="814" y="212" text-anchor="middle" font-size="10.5" fill="#ffffff" style="font-family:'SF Mono',Menlo,Consolas,monospace">HotelAgent</text>
+        <rect x="336" y="342" width="340" height="72" fill="#0E0E0E"/>
+        <rect x="330" y="336" width="340" height="72" fill="#B08BEB" stroke="#0E0E0E" stroke-width="3"/>
+        <text x="500" y="372" text-anchor="middle" font-size="17" font-weight="900" fill="#0E0E0E">行程规划 Agent</text>
+        <text x="500" y="394" text-anchor="middle" font-size="11" fill="#0E0E0E" style="font-family:'SF Mono',Menlo,Consolas,monospace">PlannerAgent · 不调用工具，只整合</text>
+        <rect x="386" y="488" width="228" height="62" fill="#0E0E0E"/>
+        <rect x="380" y="482" width="228" height="62" fill="#8BD450" stroke="#0E0E0E" stroke-width="3"/>
+        <text x="494" y="513" text-anchor="middle" font-size="16" font-weight="900" fill="#0E0E0E">最终行程计划</text>
+        <text x="494" y="533" text-anchor="middle" font-size="10.5" fill="#0E0E0E" style="font-family:'SF Mono',Menlo,Consolas,monospace">结构化 TripPlan</text>
+      </svg>
+      <figcaption>图 2 · 多智能体协作流程（自绘）</figcaption>
+    </figure>
+
+    <ol class="steps">
+      <li><b>景点搜索</b>：AttractionSearchAgent 按城市 + 偏好召回景点候选。</li>
+      <li><b>天气查询</b>：WeatherQueryAgent 取未来几天天气预报。</li>
+      <li><b>酒店推荐</b>：HotelAgent 按住宿类型搜索酒店。</li>
+      <li><b>整合生成</b>：PlannerAgent 汇总三方结果 + 用户需求，生成完整计划。</li>
+      <li><b>解析 JSON</b>：把规划师输出解析为结构化 TripPlan，返回前端。</li>
+    </ol>
+  </section>
+
+  <!-- ============ 介绍 2 · 预算计算 ============ -->
+  <section id="budget">
+    <div class="kicker">介绍 · 预算计算</div>
+    <h2 class="sec">费用拆四类，一眼看清花在哪</h2>
+    <p class="sec-note">智能旅行助手自动把行程费用拆成四大类，由 PlannerAgent 在生成行程时一并估算——以「成都 3 日游」为例。</p>
+
+    <div class="budget">
+      <div class="bcard b1"><div class="bt">景点门票</div><div class="bv">¥180</div></div>
+      <div class="bcard b2"><div class="bt">酒店住宿</div><div class="bv">¥1200</div></div>
+      <div class="bcard b3"><div class="bt">餐饮</div><div class="bv">¥480</div></div>
+      <div class="bcard b4"><div class="bt">交通</div><div class="bv">¥200</div></div>
+    </div>
+    <div class="bbar">
+      <div class="seg s1" style="width:8.7%">9%</div>
+      <div class="seg s2" style="width:58.3%">酒店 58%</div>
+      <div class="seg s3" style="width:23.3%">餐饮 23%</div>
+      <div class="seg s4" style="width:9.7%">10%</div>
+    </div>
+    <div class="btotal">合计预算 <span>¥2060</span></div>
+
+    <p class="sec-note" style="margin-top:30px;">关键在于让 PlannerAgent 输出稳定、可解析、四类求和自洽的预算 JSON。下面是优化后的提示词：</p>
+    <pre class="code"><span class="kw">PLANNER_AGENT_PROMPT</span> = """你是行程规划专家，负责把景点、天气、酒店三方结果
+整合成一份可执行、算得清账的旅行计划。你<span class="kw">不调用任何工具</span>，只做信息整合与编排。
+
+<span class="cm"># 输入</span>
+- 用户需求：目的地 {city}、天数 {days}、预算 {budget}、偏好 {preferences}、住宿类型 {hotel_type}
+- 景点信息：{attraction_response}
+- 天气信息：{weather_response}
+- 酒店信息：{hotel_response}
+
+<span class="cm"># 输出格式（严格按此 JSON 返回，不要输出任何多余文字）</span>
+{
+  <span class="st">"city"</span>: "成都",
+  <span class="st">"days"</span>: 3,
+  <span class="st">"daily_plan"</span>: [
+    {
+      <span class="st">"day"</span>: 1,
+      <span class="st">"weather"</span>: "多云 18~26℃",
+      <span class="st">"attractions"</span>: ["宽窄巷子", "武侯祠"],
+      <span class="st">"meals"</span>: ["钟水饺", "陈麻婆豆腐"],
+      <span class="st">"hotel"</span>: "锦江宾馆",
+      <span class="st">"transportation"</span>: "地铁 + 步行"
+    }
+  ],
+  <span class="st">"budget"</span>: {
+    <span class="st">"total_attractions"</span>: 180,
+    <span class="st">"total_hotels"</span>: 1200,
+    <span class="st">"total_meals"</span>: 480,
+    <span class="st">"total_transportation"</span>: 200,
+    <span class="st">"total"</span>: 2060
+  }
+}
+
+<span class="cm"># 规划要求</span>
+1. 按天数拆分行程，每天 2~3 个景点，就近安排、减少往返；
+2. 结合天气：雨天优先室内景点，晴天安排户外；
+3. 餐饮结合当地特色与景点位置就近推荐；
+4. 酒店从候选中按预算与位置择优，尽量固定同一家减少搬运；
+5. 交通方式结合景点距离给出（步行 / 地铁 / 打车）；
+6. 预算按四大类分别估算：<span class="kw">total 必须严格等于四类之和</span>；
+7. 全程不得超出用户总预算 {budget}；若超出，则下调酒店档次或精简景点。
+"""</pre>
+  </section>
+
+  <!-- ============ 介绍 3 · 成本分析 ============ -->
+  <section id="cost">
+    <div class="kicker">介绍 · 成本分析</div>
+    <h2 class="sec">一次行程生成，到底花多少钱</h2>
+    <p class="sec-note">AI 产品能不能规模化，账要算得清。这里核算单次调用成本，并用工程手段把它压下来。</p>
+
+    <div class="cost-head">单次 0.48 元 → 优化后 0.35 元，<span class="down">降本 27%</span></div>
+
+    <div class="cost-ba">
+      <div class="cost-box before">
+        <div class="cl">优化前 · 0.48 元 / 次</div>
+        <ul>
+          <li>输入 4500 Token + 输出 3560 Token</li>
+          <li>DAU 1000 时，日成本 <code>1440 元</code></li>
+          <li>约 $0.0661（Sonnet 定价 $3.00 / $15.00）</li>
+        </ul>
+      </div>
+      <div class="cost-arrow">→</div>
+      <div class="cost-box after">
+        <div class="cl">优化后 · 0.35 元 / 次</div>
+        <ul>
+          <li>缓存命中 25% + 路由 50% 走 Haiku</li>
+          <li>DAU 1000 时，日成本 <code>1050 元</code></li>
+          <li>降幅约 27%</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="sub" style="margin-top:40px;font-size:20px;">成本优化策略</h3>
+    <div class="strat">
+      <div class="s p0 c1"><span class="p">P0</span><span class="txt"><b>语义缓存</b>（命中率 25%）→ 降本 20%–25%</span></div>
+      <div class="s p1 c3"><span class="p">P1</span><span class="txt"><b>Prompt 压缩</b>（减少 25% 输入）→ 降本 10%–15%</span></div>
+      <div class="s p0 c2"><span class="p">P0</span><span class="txt"><b>模型路由</b>（咨询走 Haiku）→ 降本 25%–35%</span></div>
+      <div class="s p1 c4"><span class="p">P1</span><span class="txt"><b>流式截断</b>（15% 提前停止）→ 降本 5%–10%</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>AI 旅游智能助手 · 多智能体应用案例</span>
+    <a href="index.html#projects" style="color:var(--blue);font-weight:700;text-decoration:none;">← 返回全部项目</a>
+  </footer>
+
+</div>
+
+<script>
+  var AGENTS = {
+    attraction: {
+      face:"🧭", rn:"景点搜索专家", role:"AttractionSearchAgent", tool:"高德地图 POI 搜索",
+      intro:"专注搜索景点信息。它只需理解用户偏好（比如「历史文化」「自然风光」），调用高德地图的 POI 搜索工具，返回相关景点列表。提示词很简单，只需说明<b>如何按偏好选关键词、如何调用工具</b>。",
+      prompt:
+"你是景点搜索专家。\n\n"+
+"【工具调用格式】\n"+
+"[TOOL_CALL:amap_maps_text_search:keywords=景点,city=城市名]\n\n"+
+"【示例】\n"+
+"[TOOL_CALL:amap_maps_text_search:keywords=景点,city=北京]\n"+
+"[TOOL_CALL:amap_maps_text_search:keywords=博物馆,city=上海]\n\n"+
+"【重要】\n"+
+"- 必须使用工具搜索，不要编造信息\n"+
+"- 根据用户偏好({preferences})搜索{city}的景点"
+    },
+    weather: {
+      face:"☁️", rn:"天气查询专家", role:"WeatherQueryAgent", tool:"天气查询工具",
+      intro:"任务最明确：给一个城市名，调用天气工具，返回未来几天的天气预报。<b>职责单一，几乎不会出错</b>——但它的输出会直接影响规划师「雨天排室内、晴天排户外」的决策。",
+      prompt:
+"你是天气查询专家。\n\n"+
+"【工具调用格式】\n"+
+"[TOOL_CALL:amap_maps_weather:city=城市名]\n\n"+
+"【示例】\n"+
+"[TOOL_CALL:amap_maps_weather:city=北京]\n"+
+"[TOOL_CALL:amap_maps_weather:city=成都]\n\n"+
+"【重要】\n"+
+"- 必须使用工具查询，不要编造天气\n"+
+"- 查询 {city} 未来 {days} 天的天气预报\n"+
+"- 只返回日期、天气现象、气温区间，不做额外推断"
+    },
+    hotel: {
+      face:"🏨", rn:"酒店推荐专家", role:"HotelAgent", tool:"高德地图 POI 搜索",
+      intro:"专注搜索酒店信息。它需要理解用户住宿需求（比如「经济型」「豪华型」），调用 POI 搜索工具，返回符合要求的酒店列表，并<b>带上参考价位</b>，方便规划师做预算估算。",
+      prompt:
+"你是酒店推荐专家。\n\n"+
+"【工具调用格式】\n"+
+"[TOOL_CALL:amap_maps_text_search:keywords=酒店类型,city=城市名]\n\n"+
+"【示例】\n"+
+"[TOOL_CALL:amap_maps_text_search:keywords=经济型酒店,city=北京]\n"+
+"[TOOL_CALL:amap_maps_text_search:keywords=豪华酒店,city=上海]\n\n"+
+"【重要】\n"+
+"- 必须使用工具搜索，不要编造酒店信息\n"+
+"- 根据用户住宿偏好({hotel_type})搜索{city}的酒店\n"+
+"- 每家酒店返回名称、参考价位、位置，便于后续预算估算"
+    },
+    planner: {
+      face:"📋", rn:"行程规划专家", role:"PlannerAgent", tool:"不调用工具 · 只做整合",
+      intro:"最复杂的一环：接收前三个 Agent 的输出 + 用户原始需求（日期、预算等），整合生成完整旅行计划。它<b>不调用任何外部工具</b>，只专注信息整合与行程编排，并输出严格 JSON（含四类预算）。完整提示词见下方「预算计算」一节。",
+      prompt:
+"你是行程规划专家，负责把景点、天气、酒店三方结果整合成一份可执行、算得清账的旅行计划。\n"+
+"你不调用任何工具，只做信息整合与编排。\n\n"+
+"【输出格式】严格按 JSON 返回，含 daily_plan 与 budget（四类求和，total 必须等于四类之和）。\n"+
+"【规划要求】按天拆分、结合天气排景点、餐饮就近、酒店按预算择优、给出交通方式、全程不超总预算。\n\n"+
+"（完整版提示词见页面「预算计算」一节）"
+    }
+  };
+
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  function renderAgent(k){
+    var a = AGENTS[k];
+    var html =
+      '<div class="dh">'+
+        '<span class="df">'+a.face+'</span>'+
+        '<h4>'+a.rn+'</h4>'+
+        '<span class="role">'+a.role+'</span>'+
+        '<span class="tool">工具：'+a.tool+'</span>'+
+      '</div>'+
+      '<p class="intro">'+a.intro+'</p>'+
+      '<div class="plab">对应提示词 · Prompt</div>'+
+      '<pre class="code">'+esc(a.prompt)+'</pre>';
+    document.getElementById("agentDetail").innerHTML = html;
+  }
+
+  (function(){
+    var picker = document.getElementById("agentPicker");
+    var btns = picker.querySelectorAll(".ava");
+    btns.forEach(function(b){
+      b.addEventListener("click", function(){
+        btns.forEach(function(x){ x.classList.remove("on"); });
+        b.classList.add("on");
+        renderAgent(b.getAttribute("data-k"));
+      });
+    });
+    renderAgent("attraction");
+  })();
+</script>
+</body>
+</html>
